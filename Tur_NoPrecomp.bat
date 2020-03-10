@@ -1,0 +1,7 @@
+C:
+set location=C:\U4L\Snip\Controller
+set projectname=TurretAI
+set projectdirname=TurretAI
+set configpostfix=Editor_NoPrecomp
+set sniploc=C:\U4L\Snip
+call %sniploc%\MyBuild.bat %projectname%%configpostfix% %location%\%projectdirname%\%projectname%
