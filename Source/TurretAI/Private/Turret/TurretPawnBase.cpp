@@ -1,5 +1,6 @@
 #include "TurretPawnBase.h"
 #include "TurretBaseConfig.h"
+#include "GameUtil/Math/GameMath.h"
 #include "Util/Core/LogUtilLib.h"
 
 #include "GameFramework/SpringArmComponent.h"
@@ -36,6 +37,18 @@ ATurretPawnBase::ATurretPawnBase()
 AMyAIControllerBase* ATurretPawnBase::GetAIControllerBase() const
 {
 	return Cast<AMyAIControllerBase>(GetController());
+}
+
+void ATurretPawnBase::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+	TickTurret(DeltaSeconds);
+}
+
+void ATurretPawnBase::TickTurret(float DeltaSeconds)
+{
+	TurretState.CurrentTurretYawInComponentSpace = UGameMath::GetUnwindedDegreesUpdatedToTarget(DeltaSeconds, TurretState.CurrentTurretYawInComponentSpace, TurretState.TargetTurretYawInComponentSpace, TurretState.TurretYawUpdate, TurretState.TurretYawUpdateDirection);
+	TurretState.CurrentGunPitchInComponentSpace = UGameMath::GetUnwindedDegreesUpdatedToTarget(DeltaSeconds, TurretState.CurrentGunPitchInComponentSpace, TurretState.TargetGunPitchInComponentSpace, TurretState.GunPitchUpdate, TurretState.GunPitchUpdateDirection);
 }
 
 void ATurretPawnBase::BeginPlay()

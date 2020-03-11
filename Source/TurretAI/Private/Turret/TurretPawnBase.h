@@ -5,6 +5,7 @@
 */
 
 #include "GameFramework/Pawn.h"
+#include "I/ITurret.h"
 #include "PawnBase/IMyPawnInterface.h"
 #include "TurretPawnBase.generated.h"
 
@@ -23,6 +24,7 @@ UCLASS()
 class ATurretPawnBase : 
 	public APawn
 ,	public IMyPawnInterface
+,	public ITurret
 {
 	GENERATED_BODY()
 
@@ -36,6 +38,7 @@ public:
 	// ~ AActor Begin
 	virtual void BeginPlay() override;
 	virtual float TakeDamage(float DamageAmount, FDamageEvent const &DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
+	virtual void Tick(float DeltaSeconds) override;
 	// ~ AActor End
 	
 	// ~ IMyPawnBase Begin
@@ -43,6 +46,11 @@ public:
 	virtual UMyPawnEvents* GetEvents_Implementation() const override;
 	virtual UPawnSensingComponent* GetSensingComponent_Implementation() const override;
 	// ~ IMyPawnBase End
+
+	// ~ ITurret Begin
+	virtual FTurretState K2_GetTurretState_Implementation() const override { return TurretState; }
+	virtual void K2_SetTurretState_Implementation(const FTurretState& InState) override { TurretState = InState; }
+	// ~ ITurret End
 
 	UFUNCTION(BlueprintPure, Category = Components)
 	USceneComponent* GetRootSceneComponent() const { return RootSceneComponent; }
@@ -94,6 +102,13 @@ private:
 
 	void InitializeSensingComponent();	
 	// ~Sensing End
+	
+	// ~ ITurret Begin
+	UPROPERTY(EditAnywhere, Meta=(ShowOnlyInnerProperties))
+	FTurretState TurretState;
+
+	void TickTurret(float DeltaSeconds);
+	// ~ ITurret End
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Meta=(AllowPrivateAccess=true))
 	UMyPawnImpl* Impl = nullptr;

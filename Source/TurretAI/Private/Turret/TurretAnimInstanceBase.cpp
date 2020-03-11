@@ -1,6 +1,7 @@
 #include "TurretAnimInstanceBase.h"
-#include "GameUtil/Math/GameMathTypes.h"
-#include "Math/UnrealMathUtility.h"
+#include "Util/Core/LogUtilLib.h"
+
+#include "Engine/World.h"
 
 
 // @TODO:
@@ -10,11 +11,40 @@
 // 1. Whether the UAnimInstanceBase update function is executed on the main thread or on the separate thread?
 // 2. Can we create the setter function in the Anim instance ans use it outside the animation blueprint?
 
+void UTurretAnimInstanceBase::NativeInitializeAnimation()
+{
+	Super::NativeInitializeAnimation();
+
+	InitializeLinkToTurret();
+}
+
+void UTurretAnimInstanceBase::InitializeLinkToTurret()
+{
+	if(AActor* TheOwningActor = GetOwningActor())
+	{
+		Turret = TheOwningActor;
+		if( ! Turret )
+		{
+			M_LOG_ERROR(TEXT("Unable to link to turret: %s interface is NOT supported!"), *UTurret::StaticClass()->GetName());
+
+		}
+	}
+	else
+	{
+		if( ! GetWorld()->IsEditorWorld() )
+		{
+			M_LOG_ERROR(TEXT("Unable to link to turret: Owning actor is nullptr"));
+		}
+	}
+}
+
 void UTurretAnimInstanceBase::NativeUpdateAnimation(float DeltaTimeX)
 {
 	Super::NativeUpdateAnimation(DeltaTimeX);
-	// Yaw is between (-180; 180], so no special interpolation is necessary.
-	CurrentTurretYawInComponentSpace = UGameMath::GetUnwindedDegreesUpdatedToTarget(DeltaTimeX, CurrentTurretYawInComponentSpace, TargetTurretYawInComponentSpace, TurretYawUpdate, TurretYawUpdateDirection);
-	// Yaw is between [-90; 90], so no special interpolation is necessary.
-	CurrentGunPitchInComponentSpace = UGameMath::GetUnwindedDegreesUpdatedToTarget(DeltaTimeX, CurrentGunPitchInComponentSpace, TargetGunPitchInComponentSpace, GunPitchUpdate, GunPitchUpdateDirection);
+
+	if(Turret)
+	{
+		TurretState = Turret->GetTurretState();
+	}
+
 }
