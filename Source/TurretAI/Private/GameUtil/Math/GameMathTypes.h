@@ -16,6 +16,12 @@ struct FGameFloatUpdate
 	float Deceleration = 0.0F;
 
 	FGameFloatUpdate() {}
+	FGameFloatUpdate(float InAcceleration) :
+		Acceleration (InAcceleration)
+	,	Deceleration (InAcceleration)
+	{
+	}
+	
 	FGameFloatUpdate(float InAcceleration, float InDeceleration)  :
 		Acceleration ( InAcceleration )
 	,	Deceleration ( InDeceleration )
