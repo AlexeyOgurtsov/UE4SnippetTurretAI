@@ -1,6 +1,7 @@
 #include "TurretPawnBase.h"
 #include "TurretBaseConfig.h"
 #include "GameUtil/Math/GameMath.h"
+#include "Util/TestUtil/I/ITUController.h"
 #include "Util/Core/LogUtilLib.h"
 
 #include "GameFramework/SpringArmComponent.h"
@@ -18,19 +19,21 @@
 #include "PawnBase/MyPawnImpl.h"
 #include "Controller/MyAIControllerBase.h"
 
+#include "Engine/CollisionProfile.h"
+
 ATurretPawnBase::ATurretPawnBase()
 {
 	Impl = UMyPawnImpl::CreateInitialized(this, TEXT("Impl"));
 
+	InitMesh(nullptr);
+	RootComponent = Mesh;
+	{
+		RootSceneComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootSceneComponent"));
+		RootSceneComponent->SetupAttachment(Mesh);
+	}
 	InitProxSphere(RootSceneComponent);
-	RootComponent = ProxSphere;
-
-	RootSceneComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootSceneComponent"));
-	RootSceneComponent->SetupAttachment(RootComponent);
 
 	InitCameraAndSpringArm(RootSceneComponent);
-	InitMesh(RootSceneComponent);
-
 	InitializeSensingComponent();
 }
 
@@ -59,6 +62,179 @@ void ATurretPawnBase::BeginPlay()
 	{
 		GetAIControllerBase()->OnPawnBeginPlay(this);
 	}
+}
+
+void ATurretPawnBase::OnController_Axis_LookPitch_Implementation(float InAmount)
+{
+	// By default, pawn is moving by this controls, as ordinary,
+	// so we should call the default controller handlers for movement
+	ITUController::Execute_Default_Axis_LookPitch(GetController(), this, InAmount);
+}
+
+void ATurretPawnBase::OnController_Axis_LookYaw_Implementation(float InAmount)
+{
+	// By default, pawn is moving by this controls, as ordinary,
+	// so we should call the default controller handlers for movement
+	ITUController::Execute_Default_Axis_LookYaw(GetController(), this, InAmount);
+}
+
+void ATurretPawnBase::OnController_Axis_Forward_Implementation(float InAmount)
+{
+	// By default, pawn is moving by this controls, as ordinary,
+	// so we should call the default controller handlers for movement
+	ITUController::Execute_Default_Axis_Forward(GetController(), this, InAmount);
+}
+
+void ATurretPawnBase::OnController_Axis_Right_Implementation(float InAmount)
+{
+	// By default, pawn is moving by this controls, as ordinary,
+	// so we should call the default controller handlers for movement
+	ITUController::Execute_Default_Axis_Right(GetController(), this, InAmount);
+}
+
+void ATurretPawnBase::OnController_Axis_Up_Implementation(float InAmount)
+{
+	// By default, pawn is moving by this controls, as ordinary,
+	// so we should call the default controller handlers for movement
+	ITUController::Execute_Default_Axis_Up(GetController(), this, InAmount);
+}
+
+void ATurretPawnBase::OnController_Action_Use_Implementation()
+{
+	// Unpossession on USE: 
+	// It's handled inside the controller's use action handler.
+}
+
+void ATurretPawnBase::OnController_Action_UseTwo_Implementation()
+{
+	// Nothing is to be done here yet
+}
+
+void ATurretPawnBase::OnController_Action_UseThree_Implementation()
+{
+	// Nothing is to be done here yet
+}
+
+void ATurretPawnBase::PawnStartFire(uint8 FireModeNum)
+{
+	// FireModeNum is index of the fire mode (see actions Fire, FireTwo, FireThree)
+	// HINT Super::PawnStartFire does nothing in the UE4.24 version!
+	Super::PawnStartFire(FireModeNum);
+	// @TODO: Typically here implement the real firing!
+}
+
+void ATurretPawnBase::OnController_Action_Fire_Implementation()
+{
+	// We process firing inside the PawnStartFire
+}
+
+void ATurretPawnBase::OnController_Action_FireTwo_Implementation()
+{
+	// We process firing inside the PawnStartFire
+}
+
+void ATurretPawnBase::OnController_Action_FireThree_Implementation()
+{
+	// We process firing inside the PawnStartFire
+}
+
+void ATurretPawnBase::OnController_Action_DebugOne_Implementation()
+{
+	// Nothing is to be done here yet
+}
+
+void ATurretPawnBase::OnController_Action_DebugTwo_Implementation()
+{
+	// Nothing is to be done here yet
+}
+
+void ATurretPawnBase::OnController_Action_DebugThree_Implementation()
+{
+	// Nothing is to be done here yet
+}
+
+
+TScriptInterface<ITUController> ATurretPawnBase::K2GetTUController() const
+{
+	return TScriptInterface<ITUController>(GetController());
+}
+
+TScriptInterface<ITUController> ATurretPawnBase::K2GetTUControllerLogged(ELogFlags InLogFlags) const
+{
+	TScriptInterface<ITUController> const C = K2GetTUController();
+	if( ! C )
+	{
+		M_LOG_ERROR_IF_FLAGS(InLogFlags, TEXT("GetTUController() returned NULL"));
+	}
+	return C;
+}
+
+TScriptInterface<ITUController> ATurretPawnBase::K2GetTUControllerChecked() const
+{
+	TScriptInterface<ITUController> const C = K2GetTUController();	
+	checkf(C, TEXT("GetTUController() must return non-NULL pawn!"));
+	return C;
+}
+
+ITUController* ATurretPawnBase::GetTUController() const
+{
+	return Cast<ITUController>(GetController());
+}
+
+ITUController* ATurretPawnBase::GetTUControllerLogged(ELogFlags InLogFlags) const
+{
+	ITUController* const C = GetTUController();
+	if(C == nullptr)
+	{
+		M_LOG_ERROR_IF_FLAGS(InLogFlags, TEXT("GetTUController() returned NULL"));
+	}
+	return C;
+}
+
+ITUController* ATurretPawnBase::GetTUControllerChecked() const
+{
+	ITUController* const C = GetTUController();	
+	checkf(C, TEXT("GetTUController() must return non-NULL pawn!"));
+	return C;
+}
+
+AController* ATurretPawnBase::GetControllerLogged(ELogFlags InLogFlags) const
+{
+	AController* const C = GetController();
+	if(C == nullptr)
+	{
+		M_LOG_ERROR_IF_FLAGS(InLogFlags, TEXT("GetController() returned NULL"));
+	}
+	return C;
+}
+
+AController* ATurretPawnBase::GetControllerChecked() const
+{
+	AController* const C = GetController();	
+	checkf(C, TEXT("GetController() must return non-NULL pawn!"));
+	return C;
+}
+
+APlayerController* ATurretPawnBase::GetPCLogged(ELogFlags InLogFlags) const
+{
+	APlayerController* const C = GetPC();
+	if(C == nullptr)
+	{
+		M_LOG_ERROR_IF_FLAGS(InLogFlags, TEXT("GetPC() returned NULL"));
+	}
+	return C;
+}
+
+APlayerController* ATurretPawnBase::GetPC() const
+{
+	return Cast<APlayerController>(GetController());
+}
+
+APlayerController* ATurretPawnBase::GetPCChecked() const
+{
+	APlayerController* const C = GetPC();	
+	checkf(C, TEXT("GetController() must return non-NULL pawn!"));
+	return C;
 }
 
 void ATurretPawnBase::InitCameraAndSpringArm(USceneComponent* InAttachTo)
@@ -93,6 +269,7 @@ void ATurretPawnBase::InitMesh(USceneComponent* InAttachTo)
 			Mesh->SetSkeletalMesh(MeshFinder.Get(), /*bReInitPose*/true);
 			Mesh->SetAnimationMode(EAnimationMode::AnimationBlueprint);
 			// @TODO: Set default animation blueprint class
+			Mesh->SetCollisionProfileName(UCollisionProfile::BlockAllDynamic_ProfileName);
 		}
 
 		if(InAttachTo)

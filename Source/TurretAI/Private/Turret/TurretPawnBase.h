@@ -6,7 +6,9 @@
 
 #include "GameFramework/Pawn.h"
 #include "I/ITurret.h"
+#include "Util/TestUtil/I/ITUPawnActions.h"
 #include "PawnBase/IMyPawnInterface.h"
+#include "Util/Core/Log/MyLoggingTypes.h"
 #include "TurretPawnBase.generated.h"
 
 class UCameraComponent;
@@ -15,7 +17,7 @@ class USceneComponent;
 class USkeletalMeshComponent;
 class USphereComponent;
 class AMyAIControllerBase;
-
+class ITUController;
 class UMyPawnImpl;
 
 class UPawnSensingComponent;
@@ -24,6 +26,7 @@ UCLASS()
 class ATurretPawnBase : 
 	public APawn
 ,	public IMyPawnInterface
+,	public ITUPawnActions
 ,	public ITurret
 {
 	GENERATED_BODY()
@@ -46,6 +49,25 @@ public:
 	virtual UMyPawnEvents* GetEvents_Implementation() const override;
 	virtual UPawnSensingComponent* GetSensingComponent_Implementation() const override;
 	// ~ IMyPawnBase End
+	//
+	// ~ITUPawnActions Begin
+	// This section contains notifying functions about the controller's actions
+	virtual void OnController_Axis_LookPitch_Implementation(float InAmount) override;
+	virtual void OnController_Axis_LookYaw_Implementation(float InAmount) override;
+	virtual void OnController_Axis_Forward_Implementation(float InAmount) override;
+	virtual void OnController_Axis_Right_Implementation(float InAmount) override;
+	virtual void OnController_Axis_Up_Implementation(float InAmount) override;
+	virtual void OnController_Action_Use_Implementation() override;
+	virtual void OnController_Action_UseTwo_Implementation() override;
+	virtual void OnController_Action_UseThree_Implementation() override;
+	virtual void PawnStartFire(uint8 FireModeNum) override;
+	virtual void OnController_Action_Fire_Implementation() override;
+	virtual void OnController_Action_FireTwo_Implementation() override;
+	virtual void OnController_Action_FireThree_Implementation() override;
+	virtual void OnController_Action_DebugOne_Implementation() override;
+	virtual void OnController_Action_DebugTwo_Implementation() override;
+	virtual void OnController_Action_DebugThree_Implementation() override;
+	// ~ITUPawnActions End
 
 	// ~ ITurret Begin
 	virtual FTurretState K2_GetTurretState_Implementation() const override { return TurretState; }
@@ -89,6 +111,36 @@ private:
 	{
 		return Sensing;
 	}
+
+	// ~Controller Begin
+	UFUNCTION(BlueprintPure, Category = Controller, Meta=(DisplayName="GetTUController"))
+	TScriptInterface<ITUController> K2GetTUController() const;
+
+	UFUNCTION(BlueprintPure, Category = Controller, Meta=(DisplayName="GetTUControllerLogged"))
+	TScriptInterface<ITUController> K2GetTUControllerLogged(ELogFlags InLogFlags = ELogFlags::None) const;
+
+	UFUNCTION(BlueprintPure, Category = Controller, Meta=(DisplayName="GetTUControllerChecked"))
+	TScriptInterface<ITUController> K2GetTUControllerChecked() const;
+
+	ITUController* GetTUController() const;
+	ITUController* GetTUControllerLogged(ELogFlags InLogFlags = ELogFlags::None) const;
+	ITUController* GetTUControllerChecked() const ;
+
+	UFUNCTION(BlueprintPure, Category = Controller)
+	AController* GetControllerLogged(ELogFlags InLogFlags = ELogFlags::None) const;
+
+	UFUNCTION(BlueprintPure, Category = Controller)
+	AController* GetControllerChecked() const;
+
+	UFUNCTION(BlueprintPure, Category = Controller)
+	APlayerController* GetPC() const;
+
+	UFUNCTION(BlueprintPure, Category = Controller)
+	APlayerController* GetPCLogged(ELogFlags InLogFlags = ELogFlags::None) const;
+
+	UFUNCTION(BlueprintPure, Category = Controller)
+	APlayerController* GetPCChecked() const;
+	// ~Controller End
 
 private:
 	// ~Sensing Begin

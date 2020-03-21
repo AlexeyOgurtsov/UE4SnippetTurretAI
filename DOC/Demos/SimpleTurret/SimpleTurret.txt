@@ -1,0 +1,27 @@
+Simple turret demo.
+
+Turret can be controlled both by player and ai.
+
+----- Controlling turret by the Player.
+To control turret, player should look at it and press USE(F).
+To cease control of the turret, player should press the SELECT ZERO (0) again.
+To rotate the turret HORZ, player should use SELECT ONE (1) / SELECT TWO (2).
+To rotate the turret VERTICALLY, player should use SELECT THREE (3) / SELECT FOUR (4)
+Alternatively, movement controls can be also used to control the static turret.
+player uses normal FIRE controls to fire the turret.
+
+---- Camera when controlling turret
+Player can control the camera rotation ever if he controls the turret, being able to rotate look around the turret.
+
+--- Turret AI
+Attacks player if sees it and have enough shots.
+
+------------------------------------------------------------
+Static turret (cannot move).
+Turret rotation:
+	Turret yaw angle between [MinTurretYawAngle; MaxTurretYawAngle]
+	Gun pitch angle between [MinTurretPitchAngle; MaxTurretPitchAngle]
+
+Weapon:
+	Counts of shots is constrained.
+	Shots one shot at a single press.
