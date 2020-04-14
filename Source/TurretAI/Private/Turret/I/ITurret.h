@@ -2,6 +2,7 @@
 
 #include "UObject/Interface.h"
 #include "GameUtil/Math/GameMathTypes.h"
+#include "Util/Core/LogUtilLib.h"
 #include "ITurret.generated.h"
 
 USTRUCT(BlueprintType)
@@ -91,6 +92,41 @@ public:
 	{
 		Execute_K2_SetTargetTurretYawInComponentSpace(Cast<UObject>(this), NewYawDegs);
 	}
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Meta=(DisplayName="SetTurretYawUpdateDirection"), Category=ITurret)
+	void K2_SetTurretYawUpdateDirection(ERotationDirection NewDirection);
+	virtual void K2_SetTurretYawUpdateDirection_Implementation(ERotationDirection NewDirection)
+	{
+		FTurretState State = ITurret::Execute_K2_GetTurretState(Cast<UObject>(this));
+		State.TurretYawUpdateDirection = NewDirection;
+		ITurret::Execute_K2_SetTurretState(Cast<UObject>(this), State);
+	}
+	void SetTurretYawUpdateDirection(ERotationDirection NewDirection)
+	{
+		Execute_K2_SetTurretYawUpdateDirection(Cast<UObject>(this), NewDirection);
+	}
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Meta=(DisplayName="SetGunPitchUpdateDirection"), Category=ITurret)
+	void K2_SetGunPitchUpdateDirection(ERotationDirection NewDirection);
+	virtual void K2_SetGunPitchUpdateDirection_Implementation(ERotationDirection NewDirection)
+	{
+		FTurretState State = ITurret::Execute_K2_GetTurretState(Cast<UObject>(this));
+		State.GunPitchUpdateDirection = NewDirection;
+		ITurret::Execute_K2_SetTurretState(Cast<UObject>(this), State);
+	}
+	void SetGunPitchUpdateDirection(ERotationDirection NewDirection)
+	{
+		Execute_K2_SetGunPitchUpdateDirection(Cast<UObject>(this), NewDirection);
+	}
+
+	void AddTargetTurretYawInComponentSpace(float DeltaYawDegs)
+	{
+		if(DeltaYawDegs != 0.0F)
+		{
+			FTurretState State = ITurret::Execute_K2_GetTurretState(Cast<UObject>(this));
+			const float NewYawDegs = State.CurrentTurretYawInComponentSpace + DeltaYawDegs;
+			ITurret::Execute_K2_SetTargetTurretYawInComponentSpace(Cast<UObject>(this), NewYawDegs);
+		}
+	}
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Meta=(DisplayName="SetTargetGunPitchInComponentSpace"), Category=ITurret)
 	void K2_SetTargetGunPitchInComponentSpace(float NewPitchDegs);
@@ -103,6 +139,39 @@ public:
 	void SetTargetGunPitchInComponentSpace(float NewPitchDegs)
 	{
 		Execute_K2_SetTargetGunPitchInComponentSpace(Cast<UObject>(this), NewPitchDegs);
+	}
+	void AddTargetGunPitchInComponentSpace(float DeltaPitchDegs)
+	{
+		if(DeltaPitchDegs != 0.0F)
+		{
+			FTurretState State = ITurret::Execute_K2_GetTurretState(Cast<UObject>(this));
+			const float NewPitchDegs = State.CurrentGunPitchInComponentSpace + DeltaPitchDegs;
+			ITurret::Execute_K2_SetTargetGunPitchInComponentSpace(Cast<UObject>(this), NewPitchDegs);
+		}
+	}
+	void RotateGunPitchMinimal(float DeltaPitchDegs)
+	{
+		AddTargetGunPitchInComponentSpace(DeltaPitchDegs);
+		const ERotationDirection NewDirection = GetMinimalPitchRotateToTargetDirection();
+		SetGunPitchUpdateDirection(NewDirection);
+	}
+	void RotateTurretYawMinimal(float DeltaYawDegs)
+	{
+		AddTargetTurretYawInComponentSpace(DeltaYawDegs);
+		const ERotationDirection NewDirection = GetMinimalYawRotateToTargetDirection();
+		SetTurretYawUpdateDirection(NewDirection);
+	}
+	ERotationDirection GetMinimalYawRotateToTargetDirection() const
+	{
+		FTurretState State = ITurret::Execute_K2_GetTurretState(Cast<UObject>(this));
+		const ERotationDirection NewDirection = ((State.TargetTurretYawInComponentSpace - State.CurrentTurretYawInComponentSpace) < 0) ? ERotationDirection::Clockwise : ERotationDirection::CounterClockwise;
+		return NewDirection;
+	}
+	ERotationDirection GetMinimalPitchRotateToTargetDirection() const
+	{
+		FTurretState State = ITurret::Execute_K2_GetTurretState(Cast<UObject>(this));
+		const ERotationDirection NewDirection = ((State.TargetGunPitchInComponentSpace - State.CurrentGunPitchInComponentSpace) < 0) ? ERotationDirection::Clockwise : ERotationDirection::CounterClockwise;
+		return NewDirection;
 	}
 };
 

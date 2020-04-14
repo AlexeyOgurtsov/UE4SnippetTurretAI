@@ -87,7 +87,8 @@ private:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Motion, Meta=(AllowPrivateAccess = true))
 	UPawnMovementComponent *Movement = nullptr;
 	// ~Motion End
-	
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Impl, Meta=(AllowPrivateAccess = true))
 	UMyPawnImpl* Impl = nullptr;
+	
 };

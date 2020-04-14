@@ -19,6 +19,7 @@ class USphereComponent;
 class AMyAIControllerBase;
 class ITUController;
 class UMyPawnImpl;
+class UQuickWeaponComponent;
 
 class UPawnSensingComponent;
 
@@ -69,6 +70,11 @@ public:
 	virtual void OnController_Action_DebugThree_Implementation() override;
 	// ~ITUPawnActions End
 
+	// ~ Weapon Begin
+	UFUNCTION(BlueprintCallable, Category = Weapon)
+	bool FireWeaponByIndex_IfCan(int32 InWeaponIndex);
+	// ~ Weapon End
+
 	// ~ ITurret Begin
 	virtual FTurretState K2_GetTurretState_Implementation() const override { return TurretState; }
 	virtual void K2_SetTurretState_Implementation(const FTurretState& InState) override { TurretState = InState; }
@@ -105,6 +111,9 @@ private:
 	USphereComponent* ProxSphere = nullptr;
 	void InitProxSphere(USceneComponent* InAttachTo);
 	
+	UFUNCTION(BlueprintPure, Category = Weapon)
+	UQuickWeaponComponent* GetWeaponComponent() const { return WeaponComponent; }
+
 	/** GetSensing*/
 	UFUNCTION(BlueprintPure, Category=Sensing)
 	UPawnSensingComponent* GetSensing() const
@@ -155,13 +164,20 @@ private:
 	void InitializeSensingComponent();	
 	// ~Sensing End
 	
+	// ~ Weapon Begin
+	UPROPERTY(EditAnywhere, Category = Weapon)
+	UQuickWeaponComponent* WeaponComponent = nullptr;
+
+	void InitWeaponComponent();
+	// ~ Weapon End
+	
 	// ~ ITurret Begin
 	UPROPERTY(EditAnywhere, Meta=(ShowOnlyInnerProperties))
 	FTurretState TurretState;
 
 	void TickTurret(float DeltaSeconds);
 	// ~ ITurret End
-	
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Meta=(AllowPrivateAccess=true))
 	UMyPawnImpl* Impl = nullptr;
 };

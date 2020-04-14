@@ -10,10 +10,11 @@ UMyPawnImpl::UMyPawnImpl()
 	MyEvents = CreateDefaultSubobject<UMyPawnEvents>(TEXT("Events"));
 }
 
-UMyPawnImpl* UMyPawnImpl::CreateInitialized(AActor* const InOwner, const FName InName)
+UMyPawnImpl* UMyPawnImpl::CreateInitialized(AActor* const InOwner, const FName InName, UWeaponComponent* InWeaponComponent)
 {
 	UMyPawnImpl* const Obj = InOwner->CreateDefaultSubobject<UMyPawnImpl>(InName);
 	Obj->Owner = InOwner;
+	Obj->WeaponComponent = InWeaponComponent;
 	return Obj;
 }
 

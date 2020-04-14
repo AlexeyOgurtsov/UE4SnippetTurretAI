@@ -3,6 +3,8 @@
 #include "GameUtil/Math/GameMath.h"
 #include "Util/TestUtil/I/ITUController.h"
 #include "Util/Core/LogUtilLib.h"
+#include "Util/Weapon/QuickWeaponComponent/QuickWeaponComponent.h"
+#include "Util/Weapon/QuickWeaponComponent/QuickWeaponTypesLib.h"
 
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
@@ -35,6 +37,14 @@ ATurretPawnBase::ATurretPawnBase()
 
 	InitCameraAndSpringArm(RootSceneComponent);
 	InitializeSensingComponent();
+	InitWeaponComponent();
+}
+
+void ATurretPawnBase::InitWeaponComponent()
+{
+	M_LOGFUNC();
+	WeaponComponent = CreateDefaultSubobject<UQuickWeaponComponent>(TEXT("WeaponComponent"));
+	UQuickWeaponTypesLib::InitializePrimaryWeapon(WeaponComponent, *GetMesh()->GetName());
 }
 
 AMyAIControllerBase* ATurretPawnBase::GetAIControllerBase() const
@@ -58,6 +68,7 @@ void ATurretPawnBase::BeginPlay()
 {
 	M_LOGFUNC();
 	Super::BeginPlay();
+	WeaponComponent->ReAttachToSockets();
 	if( GetAIControllerBase() )
 	{
 		GetAIControllerBase()->OnPawnBeginPlay(this);
@@ -80,16 +91,14 @@ void ATurretPawnBase::OnController_Axis_LookYaw_Implementation(float InAmount)
 
 void ATurretPawnBase::OnController_Axis_Forward_Implementation(float InAmount)
 {
-	// By default, pawn is moving by this controls, as ordinary,
-	// so we should call the default controller handlers for movement
-	ITUController::Execute_Default_Axis_Forward(GetController(), this, InAmount);
+	const float DELTA_GUN_PITCH = 10.F;
+	RotateGunPitchMinimal(DELTA_GUN_PITCH * InAmount);
 }
 
 void ATurretPawnBase::OnController_Axis_Right_Implementation(float InAmount)
 {
-	// By default, pawn is moving by this controls, as ordinary,
-	// so we should call the default controller handlers for movement
-	ITUController::Execute_Default_Axis_Right(GetController(), this, InAmount);
+	const float DELTA_TURRET_YAW = 20.F;
+	RotateTurretYawMinimal(DELTA_TURRET_YAW * InAmount);
 }
 
 void ATurretPawnBase::OnController_Axis_Up_Implementation(float InAmount)
@@ -120,22 +129,38 @@ void ATurretPawnBase::PawnStartFire(uint8 FireModeNum)
 	// FireModeNum is index of the fire mode (see actions Fire, FireTwo, FireThree)
 	// HINT Super::PawnStartFire does nothing in the UE4.24 version!
 	Super::PawnStartFire(FireModeNum);
-	// @TODO: Typically here implement the real firing!
+	FireWeaponByIndex_IfCan(FireModeNum);
+}
+
+bool ATurretPawnBase::FireWeaponByIndex_IfCan(int32 InWeaponIndex)
+{
+	if(WeaponComponent == nullptr)
+	{
+		M_LOG_ERROR(TEXT("Unable to fire: weapon component is nullptr"));
+		return false;
+	}
+
+	bool bSucceeded = IWeaponInventory::Execute_FireByIndex(WeaponComponent, InWeaponIndex);
+	M_LOG_ERROR_IF(bSucceeded, TEXT("Firing failed (index = %d)"), InWeaponIndex);
+	return bSucceeded; 
 }
 
 void ATurretPawnBase::OnController_Action_Fire_Implementation()
 {
 	// We process firing inside the PawnStartFire
+	PawnStartFire(0);
 }
 
 void ATurretPawnBase::OnController_Action_FireTwo_Implementation()
 {
 	// We process firing inside the PawnStartFire
+	PawnStartFire(1);
 }
 
 void ATurretPawnBase::OnController_Action_FireThree_Implementation()
 {
 	// We process firing inside the PawnStartFire
+	PawnStartFire(2);
 }
 
 void ATurretPawnBase::OnController_Action_DebugOne_Implementation()
