@@ -1,6 +1,7 @@
 #include "MyPlayerController.h"
 #include "MyPlayerPawn.h"
 #include "MyGameConfig.h"
+#include "GameUtil/MyTargetActor.h"
 #include "GameUtil/Possess/PossessControllerComponent.h"
 
 #include "Util/Core/LogUtilLib.h"
@@ -8,6 +9,7 @@
 MyPCType::AMyPlayerController()
 {
 	PossessComponent = UPossessControllerComponent::CreateInitializedDefaultSubobject(this, TEXT("PossessComponent"));
+	AddSelectableActorClass(AMyTargetActor::StaticClass());
 }
 
 void MyPCType::OnUnPossess()

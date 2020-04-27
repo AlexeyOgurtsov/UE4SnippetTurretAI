@@ -1,3 +1,8 @@
-1. Make turret rotate
-2. Make turret controllable by pawn
-3. Make turret fire
+1. Make turret rotate (+DONE)
+2. Make turret controllable by pawn (+DONE)
+3. Make turret fire (+DONE)
+4. Make pawn aim at ability, test possessed with player controller
+
+------------ Make turret fire BUGS -------------
+1. Wrong collision detection
+2. 

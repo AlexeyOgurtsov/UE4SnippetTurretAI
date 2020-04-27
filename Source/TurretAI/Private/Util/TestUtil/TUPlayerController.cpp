@@ -1,6 +1,9 @@
 #include "TUPlayerController.h"
 #include "TUPawn.h"
 
+#include "Util/Selection/ActorSelectionComponent.h"
+#include "Util/Selection/UI/ActorSelectorUIComponent.h"
+
 #include "Util/Core/LogUtilLib.h"
 
 #include "GameFramework/PawnMovementComponent.h" // For casts
@@ -9,7 +12,8 @@
 namespace
 {
 	constexpr int32 NUM_SELECT_ACTIONS = 10;
-
+	constexpr int32 NUM_SELECT_ACTOR_ACTIONS = 6;
+	constexpr int NUM_SELECT_INVENTORY_ACTIONS = 0;
 
 	/**
 	* WARNING! Typically this coeff is to be ONE always, the movement speed is to be configurated inside the movement component!
@@ -24,6 +28,17 @@ ATUPlayerController::ATUPlayerController()
 {
 	M_LOGFUNC();
 	LogThis();
+
+	if (IsLocalPlayerController())
+	{
+		InitActorSelector();
+		InitActorSelectorUI();
+	}
+}
+
+void ATUPlayerController::InitActorSelectorUI()
+{	
+	ActorSelectorUI = CreateOptionalDefaultSubobject<UActorSelectorUIComponent>(TUCONTROLLER_SELECTOR_UI_COMPONENT_NAME);		
 }
 
 void ATUPlayerController::PostInitProperties()
@@ -62,11 +77,22 @@ void ATUPlayerController::PostInitializeComponents()
 	Super::PostInitializeComponents();
 }
 
+void ATUPlayerController::InitActorSelector()
+{
+	M_LOGFUNC_IF(TUConfig.bLogBigEvents);
+	ActorSelector = CreateDefaultSubobject<UActorSelectionComponent>(TUCONTROLLER_DEFAULT_ACTOR_SELECTOR_COMPONENT_NAME);
+}
+
 void ATUPlayerController::BeginPlay()
 {
 	M_LOGFUNC_IF(TUConfig.bLogBigEvents);
 	LogThisIf(TUConfig.bLogBigEvents);
 	Super::BeginPlay();
+	if (ActorSelectorUI)
+	{
+		M_LOG(TEXT("Initializing actor selector UI at controller's BeginPlay"));
+		ActorSelectorUI->InitAtControllerBeginPlay(ActorSelector);
+	}
 }
 
 void ATUPlayerController::EndPlay(EEndPlayReason::Type InReason)
@@ -147,6 +173,17 @@ void ATUPlayerController::SetupInputComponent()
 	InputComponent->BindAction(TEXT("DebugOne"), IE_Pressed, this, &ATUPlayerController::Action_DebugOneChecked);
 	InputComponent->BindAction(TEXT("DebugTwo"), IE_Pressed, this, &ATUPlayerController::Action_DebugTwoChecked);
 	InputComponent->BindAction(TEXT("DebugThree"), IE_Pressed, this, &ATUPlayerController::Action_DebugThreeChecked);
+
+	InputComponent->BindAction(TEXT("SelectNextActor"), IE_Pressed, this, &ATUPlayerController::Action_SelectNextActorChecked);
+	InputComponent->BindAction(TEXT("SelectPreviousActor"), IE_Pressed, this, &ATUPlayerController::Action_SelectPreviousActorChecked);
+	InputComponent->BindAction(TEXT("SelectActor0"), IE_Pressed, this, &ATUPlayerController::Action_SelectActorZeroChecked);
+	InputComponent->BindAction(TEXT("SelectActor1"), IE_Pressed, this, &ATUPlayerController::Action_SelectActorOneChecked);
+	InputComponent->BindAction(TEXT("SelectActor2"), IE_Pressed, this, &ATUPlayerController::Action_SelectActorTwoChecked);
+	InputComponent->BindAction(TEXT("SelectActor3"), IE_Pressed, this, &ATUPlayerController::Action_SelectActorThreeChecked);
+	InputComponent->BindAction(TEXT("SelectActor4"), IE_Pressed, this, &ATUPlayerController::Action_SelectActorFourChecked);
+
+	InputComponent->BindAction(TEXT("SelectNextInventory"), IE_Pressed, this, &ATUPlayerController::Action_SelectNextInventoryChecked);
+	InputComponent->BindAction(TEXT("SelectPreviousInventory"), IE_Pressed, this, &ATUPlayerController::Action_SelectPreviousInventoryChecked);
 }
 
 void ATUPlayerController::SetGameInputEnableState(bool bInEnabled)
@@ -655,6 +692,147 @@ void ATUPlayerController::Action_DebugThreeChecked()
 	Action_DebugThree();
 }
 
+void ATUPlayerController::Action_SelectNextActorChecked()
+{
+	if (APawn* P = GetTUPawn())
+	{
+		if (ITUPawnActions* PawnActions = Cast<ITUPawnActions>(P))
+		{
+			ITUPawnActions::Execute_OnController_Action_ActorSelectNext(P);
+		}
+	}
+	Action_SelectNextActor();
+}
+
+void ATUPlayerController::Action_SelectPreviousActorChecked()
+{
+	if (APawn* P = GetTUPawn())
+	{
+		if (ITUPawnActions* PawnActions = Cast<ITUPawnActions>(P))
+		{
+			ITUPawnActions::Execute_OnController_Action_ActorSelectPrevious(P);
+		}
+	}
+	Action_SelectPreviousActor();
+}
+
+
+void ATUPlayerController::Action_SelectNextActor()
+{
+	if (TScriptInterface<IActorSelector> Selector = GetActorSelector())
+	{
+		Selector->SelectNext();
+		if (ActorSelectorUI)
+		{
+			ActorSelectorUI->UpdateUI();
+		}
+	}
+	else
+	{
+		M_LOG_ERROR(TEXT("Actor selector is nullptr"));
+	}
+}
+
+void ATUPlayerController::Action_SelectPreviousActor()
+{
+	if (TScriptInterface<IActorSelector> Selector = GetActorSelector())
+	{
+		Selector->SelectPrevious();
+		if (ActorSelectorUI)
+		{
+			ActorSelectorUI->UpdateUI();
+		}
+	}
+	else
+	{
+		M_LOG_ERROR(TEXT("Actor selector is nullptr"));
+	}
+}
+
+void ATUPlayerController::Action_SelectNextInventoryChecked()
+{
+	if (APawn* P = GetTUPawn())
+	{
+		if (ITUPawnActions* PawnActions = Cast<ITUPawnActions>(P))
+		{
+			ITUPawnActions::Execute_OnController_Action_SelectNextInventory(P);
+		}
+	}
+	Action_SelectNextInventory();
+}
+
+void ATUPlayerController::Action_SelectPreviousInventoryChecked()
+{
+	if (APawn* P = GetTUPawn())
+	{
+		if (ITUPawnActions* PawnActions = Cast<ITUPawnActions>(P))
+		{
+			ITUPawnActions::Execute_OnController_Action_SelectPreviousInventory(P);
+		}
+	}
+	Action_SelectPreviousInventory();
+}
+
+void ATUPlayerController::Action_SelectNextInventory()
+{
+	// @TODO
+}
+
+void ATUPlayerController::Action_SelectPreviousInventory()
+{
+	// @TODO
+}
+
+void ATUPlayerController::Action_SelectActorZeroChecked()
+{
+	ActionSelectGeneralChecked(0);
+}
+
+void ATUPlayerController::Action_SelectActorOneChecked()
+{
+	ActionSelectGeneralChecked(1);
+}
+
+void ATUPlayerController::Action_SelectActorTwoChecked()
+{
+	ActionSelectGeneralChecked(2);
+}
+
+void ATUPlayerController::Action_SelectActorThreeChecked()
+{
+	ActionSelectGeneralChecked(3);
+}
+
+void ATUPlayerController::Action_SelectActorFourChecked()
+{
+	ActionSelectGeneralChecked(4);
+}
+
+void ATUPlayerController::Action_SelectActorFiveChecked()
+{
+	ActionSelectGeneralChecked(5);
+}
+
+void ATUPlayerController::Action_SelectActorSixChecked()
+{
+	ActionSelectGeneralChecked(6);
+}
+
+void ATUPlayerController::Action_SelectActorSevenChecked()
+{
+	ActionSelectGeneralChecked(7);
+}
+
+void ATUPlayerController::Action_SelectActorEightChecked()
+{
+	ActionSelectGeneralChecked(8);
+}
+
+void ATUPlayerController::Action_SelectActorNineChecked()
+{
+	ActionSelectGeneralChecked(9);
+}
+
 void ATUPlayerController::Action_OpenGameMenu()
 {
 	M_LOG(TEXT("Action %s: skipping (empty)"), TEXT(__FUNCTION__));
@@ -690,9 +868,51 @@ void ATUPlayerController::ActionSelectGeneralChecked(const int32 InIndex)
 	ActionSelectGeneral(InIndex);	
 }
 
+void ATUPlayerController::ActionSelectActorGeneralChecked(int32 InIndex)
+{
+	M_LOGFUNC();
+
+	checkf(InIndex >= 0, TEXT("Select actor index out of range: %d"), InIndex);
+	checkf(InIndex < NUM_SELECT_ACTOR_ACTIONS, TEXT("Select actor index of out range: %d"), InIndex);
+
+	ActionSelectActorGeneral(InIndex);
+}
+
+void ATUPlayerController::ActionSelectInventoryGeneralChecked(int32 InIndex)
+{
+	M_LOGFUNC();
+
+	checkf(InIndex >= 0, TEXT("Select inventory index out of range: %d"), InIndex);
+	checkf(InIndex < NUM_SELECT_INVENTORY_ACTIONS, TEXT("Select inventory index of out range: %d"), InIndex);
+
+	ActionSelectInventoryGeneral(InIndex);
+}
+
 void ATUPlayerController::ActionSelectGeneral(const int32 InIndex)
 {
 	M_LOG(TEXT("Select action N %d: skipping (empty)"), InIndex);
+}
+
+void ATUPlayerController::ActionSelectActorGeneral(int32 InIndex)
+{
+	M_LOG(TEXT("Selecting actor with index %d"), InIndex);
+	if (TScriptInterface<IActorSelector> Selector = GetActorSelector())
+	{
+		Selector->SetSelectionIndex(InIndex);
+		if (ActorSelectorUI)
+		{
+			ActorSelectorUI->UpdateUI();
+		}
+	}
+	else
+	{
+		M_LOG_ERROR(TEXT("cannot perform select actor action - Actor selector is nullptr"));
+	}
+}
+
+void ATUPlayerController::ActionSelectInventoryGeneral(int32 InIndex)
+{
+	M_LOG(TEXT("Select inventory action N %d: skipping (empty)"), InIndex);
 }
 
 void ATUPlayerController::ActionMoveGeneral(APawn* const P, const FVector& InDirection, const float InAmount)
@@ -761,6 +981,70 @@ ATUPawn* ATUPlayerController::GetMyTUPawnChecked() const
 	ATUPawn* const P = GetTUPawn();
 	checkf(P, TEXT("GetTUPawn() must return non-NULL pawn!"));
 	return P;
+}
+
+UActorSelectionComponent* ATUPlayerController::GetActorSelectionComponent() const
+{
+	return Cast<UActorSelectionComponent>(GetActorSelector().GetObject());
+}
+
+bool ATUPlayerController::IsActorSelected() const
+{
+	if (TScriptInterface<IActorSelector> Selector = GetActorSelector())
+	{
+		return Selector->IsActorSelected();
+	}
+	else
+	{
+		return nullptr;
+	}
+}
+
+AActor* ATUPlayerController::GetSelectedActor() const
+{
+	if (TScriptInterface<IActorSelector> Selector = GetActorSelector())
+	{
+		return Selector->GetSelectedActor();
+	}
+	else
+	{
+		return nullptr;
+	}
+}
+
+
+void ATUPlayerController::AddActorSelectionRule(const FActorSelectionRule& InRule)
+{
+	if (UActorSelectionComponent* SelectionComp = GetActorSelectionComponent())
+	{
+		SelectionComp->SelectionProps.Rule.Rules.Add(InRule);
+	}
+	else
+	{
+		M_LOG_ERROR(TEXT("No actor selector component or it's NOT instance of the \"%s\" class"), TEXT("UActorSelectionComponent"));
+	}
+}
+
+void ATUPlayerController::AddSelectableActorClass(const UClass* InActorClass)
+{
+	checkf(InActorClass, TEXT("Actor class should never be passed as nullptr when calling \"%s\""), TEXT(__FUNCTION__));
+	FActorSelectionRule Rule;
+	Rule.AllowedClasses.Add(InActorClass);
+	AddActorSelectionRule(Rule);
+}
+
+void ATUPlayerController::AddSelectableActorClassWithTags(const UClass* InActorClass, const TArray<FName>& InTags)
+{
+	checkf(InActorClass, TEXT("Actor class should never be passed as nullptr when calling \"%s\""), TEXT(__FUNCTION__));
+	FActorSelectionRule Rule;
+	Rule.AllowedClasses.Add(InActorClass);
+	Rule.AllowedTags.Append(InTags);
+	AddActorSelectionRule(Rule);
+}
+
+void ATUPlayerController::AddSelectableActorTags(const TArray<FName> & InTags)
+{
+	AddSelectableActorClassWithTags(AActor::StaticClass(), InTags);
 }
 
 void ATUPlayerController::LogThisIf(bool const bInShouldLog)
