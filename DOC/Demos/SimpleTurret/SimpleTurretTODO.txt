@@ -1,7 +1,11 @@
 1. Make turret rotate (+DONE)
 2. Make turret controllable by pawn (+DONE)
 3. Make turret fire (+DONE)
-4. Make pawn aim at ability, test possessed with player controller
+4. Make pawn aim at 
+	4.1. Aimt at (+DONE)
+	4.2. test possessed with player controller (+DONE)
+	4.3. Full aiming support (see the corresponding file)
+	4.4. ability
 
 ------------ Make turret fire BUGS -------------
 1. Wrong collision detection

@@ -75,9 +75,20 @@ public:
 	bool FireWeaponByIndex_IfCan(int32 InWeaponIndex);
 	// ~ Weapon End
 
-	// ~ ITurret Begin
+	// ~ ITurret Begin	
+	virtual FVector2D K2_GetTargetAzimuthAndElevation_Implementation(AActor* InTarget) const override;
+	virtual bool K2_IsTargetReachable_Implementation(float InDistance, const FVector2D& InAzimuthAndElevation) const override;
+	virtual bool K2_IsTargetReachableByElevation_Implementation(const FVector2D& InTargetAndElevation) const override;
+	virtual bool K2_IsTargetReachableByDistance_Implementation(float InDistance) const override;
+
+	virtual UTurretEvents* K2_GetTurretEvents_Implementation() const;
 	virtual FTurretState K2_GetTurretState_Implementation() const override { return TurretState; }
 	virtual void K2_SetTurretState_Implementation(const FTurretState& InState) override { TurretState = InState; }
+
+	virtual ETurretAimingResult K2_StartAimingAt_Implementation(AActor* NewTargetActor) override;
+	virtual bool K2_IsAimingFinished_Implementation() const override;
+
+	virtual void K2_StopAiming_Implementation(const FString& InReason, ETurretAimingResult InResult) override;
 	// ~ ITurret End
 
 	UFUNCTION(BlueprintPure, Category = Components)
@@ -149,6 +160,13 @@ private:
 
 	UFUNCTION(BlueprintPure, Category = Controller)
 	APlayerController* GetPCChecked() const;
+
+	/**
+	* WARNING! Use only when you known exactly that we are controlled by player controller
+	* (NOT ai controller!)
+	*/
+	UFUNCTION(BlueprintPure, Category = Controller)
+	class AMyPlayerController* GetMyPC() const;
 	// ~Controller End
 
 private:
@@ -172,8 +190,11 @@ private:
 	// ~ Weapon End
 	
 	// ~ ITurret Begin
+	void SignalAimingFinished(ETurretAimingResult InAimResult, AActor* InTargetActor);
+
 	UPROPERTY(EditAnywhere, Meta=(ShowOnlyInnerProperties))
 	FTurretState TurretState;
+	UTurretEvents* Events = nullptr;
 
 	void TickTurret(float DeltaSeconds);
 	// ~ ITurret End

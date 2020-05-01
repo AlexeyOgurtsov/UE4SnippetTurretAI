@@ -2,6 +2,8 @@
 #include "MyPlayerPawn.h"
 #include "MyGameConfig.h"
 #include "GameUtil/MyTargetActor.h"
+#include "Turret/I/ITurret.h"
+#include "Turret/I/TurretEvents.h"
 #include "GameUtil/Possess/PossessControllerComponent.h"
 
 #include "Util/Core/LogUtilLib.h"
@@ -18,6 +20,10 @@ void MyPCType::OnUnPossess()
 	{
 		PossessComponent->OnController_UnPossessed(GetPawn());
 	}
+	if (ITurret* Tur = Cast<ITurret>(GetPawn()))
+	{
+		OnUnPossessTurret(Tur);
+	}
 	Super::OnUnPossess();
 }
 
@@ -28,6 +34,44 @@ void MyPCType::OnPossess(APawn* InPawn)
 	{
 		PossessComponent->OnController_Possessed(InPawn);
 	}
+	if (ITurret* Tur = Cast<ITurret>(GetPawn()))
+	{
+		OnPossessTurret(Tur);
+	}
+}
+
+void MyPCType::OnUnPossessTurret(ITurret* const Turret)
+{
+	// @TODO: ubind events
+	Turret->GetTurretEvents()->OnAimingFinished.RemoveAll(this);
+}
+
+void MyPCType::OnPossessTurret(ITurret* const Turret)
+{
+	if (Turret)
+	{
+		Turret->GetTurretEvents()->OnAimingFinished.AddDynamic(this, &MyPCType::OnAimFinished);
+	}
+}
+
+void MyPCType::OnAimFinished(const FOnTurretAimingFinishedDelegateArgs& InAimingFinished)
+{
+	AActor* const TargetActor = InAimingFinished.TargetActor;
+	// @TODO: Log aiming result
+	FString TargetActorName;
+	FString TargetActorClassName;
+	if (TargetActor)
+	{
+		TargetActorName = *TargetActor->GetName();
+		TargetActorClassName = *TargetActor->GetClass()->GetName();
+	}
+	else
+	{
+		TargetActorName = FString(TEXT("nullptr"));
+		TargetActorClassName = FString(TEXT("nullptr"));
+	}
+
+	M_LOG(TEXT("%s: TargetActor is \"%s\""), TEXT(__FUNCTION__), *TargetActorName, *TargetActorClassName);
 }
  
 void MyPCType::BeginPlay()
@@ -198,24 +242,39 @@ void MyPCType::Action_CloseGameMenu()
 }
 
 void MyPCType::Action_DebugOne()
-{
-	// ACTION OVERRIDE POINT:
-	// If you want to override, REPLACE(!) the given super call
-	Super::Action_DebugOne();
+{	
+	if (auto P = Cast<ITUPawnActions>(GetPawn()))
+	{
+		ITUPawnActions::Execute_OnController_Action_DebugOne(GetPawn());
+	}
+	else
+	{
+		M_LOG_ERROR(TEXT("No pawn or it does now support ITUPawnActions interface"));
+	}
 }
 
 void MyPCType::Action_DebugTwo()
 {
-	// ACTION OVERRIDE POINT:
-	// If you want to override, REPLACE(!) the given super call
-	Super::Action_DebugTwo();
+	if (auto P = Cast<ITUPawnActions>(GetPawn()))
+	{
+		ITUPawnActions::Execute_OnController_Action_DebugTwo(GetPawn());
+	}
+	else
+	{
+		M_LOG_ERROR(TEXT("No pawn or it does now support ITUPawnActions interface"));
+	}
 }
 
 void MyPCType::Action_DebugThree()
 {
-	// ACTION OVERRIDE POINT:
-	// If you want to override, REPLACE(!) the given super call
-	Super::Action_DebugThree();
+	if (auto P = Cast<ITUPawnActions>(GetPawn()))
+	{
+		ITUPawnActions::Execute_OnController_Action_DebugThree(GetPawn());
+	}
+	else
+	{
+		M_LOG_ERROR(TEXT("No pawn or it does now support ITUPawnActions interface"));
+	}
 }
 
 MyPawnType* MyPCType::GetMyPawn() const

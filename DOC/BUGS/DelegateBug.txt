@@ -1,0 +1,53 @@
+------------- Where: 
+MyPlayerController.cpp
+
+void MyPCType::OnPossessTurret(ITurret* const Turret)
+{
+	if (Turret)
+	{
+		// At THIS line:
+		Turret->GetTurretEvents()->OnAimingFinished.AddDynamic(this, &MyPCType::OnAimFinished);
+	}
+}
+
+------------- When: 
+	*NOT* Every time!!!
+
+------------- Error:
+	/**
+	 * Script delegate base class.
+	 */
+	template <typename TWeakPtr = FWeakObjectPtr>
+	class TScriptDelegate
+	{
+		/** 
+		 * Checks to see if the user object bound to this delegate will ever be valid again
+		 *
+		 * @return  True if the object is still valid and it's safe to execute the function call
+		 */
+		inline bool IsCompactable() const
+		{
+			return FunctionName == NAME_None || !Object.Get(true);
+		}
+	} // 
+
+	template <class PREDICATE_CLASS>
+	void TArray<>::RemoveAllSwap(const PREDICATE_CLASS& Predicate, bool bAllowShrinking = true)
+	{
+		for (SizeType ItemIndex = 0; ItemIndex < Num();)
+		{
+			// THIS LINE
+			if (Predicate((*this)[ItemIndex]))
+			{
+				RemoveAtSwap(ItemIndex, 1, bAllowShrinking);
+			}
+			else
+			{
+				++ItemIndex;
+			}
+		}
+	}
+	..
+	AddInternal
+	__Add
+	__Internal_AddDynamic

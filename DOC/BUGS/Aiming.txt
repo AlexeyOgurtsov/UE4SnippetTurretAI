@@ -1,0 +1,1 @@
+No aiming to target is performed (by pressing the Debug1        ( SHIFT + 1 )         )

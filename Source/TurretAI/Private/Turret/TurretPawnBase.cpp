@@ -5,15 +5,25 @@
 #include "Util/Core/LogUtilLib.h"
 #include "Util/Weapon/QuickWeaponComponent/QuickWeaponComponent.h"
 #include "Util/Weapon/QuickWeaponComponent/QuickWeaponTypesLib.h"
+#include "MyGame/MyPlayerController.h"
+#include "Turret/I/TurretEvents.h"
 
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Components/SceneComponent.h"
 #include "Components/SphereComponent.h"
 
+#include "Math/UnrealMathUtility.h"
 #include "UObject/ConstructorHelpers.h"
-
 #include "Components/SkeletalMeshComponent.h"
+
+/**
+* TODO:
+* 1. Signal when aiming is finished;
+* 2. Update when target actor is updated:
+*	- Stop aiming when target aim target is destroyed;
+*	- update movement aiming direction when aim target changed its location (Should be?)
+*/
 
 // WARN
 #include "Perception/PawnSensingComponent.h"
@@ -26,6 +36,7 @@
 ATurretPawnBase::ATurretPawnBase()
 {
 	Impl = UMyPawnImpl::CreateInitialized(this, TEXT("Impl"));
+	Events = CreateDefaultSubobject<UTurretEvents>(TEXT("Events"));
 
 	InitMesh(nullptr);
 	RootComponent = Mesh;
@@ -60,8 +71,18 @@ void ATurretPawnBase::Tick(float DeltaSeconds)
 
 void ATurretPawnBase::TickTurret(float DeltaSeconds)
 {
+	if (TurretState.Aim.TargetActor.IsStale())
+	{
+		StopAiming(FString(TEXT("TargetActor is stale")), ETurretAimingResult::TargetIsDestroyed);
+	}
+
 	TurretState.CurrentTurretYawInComponentSpace = UGameMath::GetUnwindedDegreesUpdatedToTarget(DeltaSeconds, TurretState.CurrentTurretYawInComponentSpace, TurretState.TargetTurretYawInComponentSpace, TurretState.TurretYawUpdate, TurretState.TurretYawUpdateDirection);
 	TurretState.CurrentGunPitchInComponentSpace = UGameMath::GetUnwindedDegreesUpdatedToTarget(DeltaSeconds, TurretState.CurrentGunPitchInComponentSpace, TurretState.TargetGunPitchInComponentSpace, TurretState.GunPitchUpdate, TurretState.GunPitchUpdateDirection);
+}
+
+void ATurretPawnBase::SignalAimingFinished(ETurretAimingResult InAimResult, AActor* InTargetActor)
+{
+	Events->OnAimingFinished.Broadcast(FOnTurretAimingFinishedDelegateArgs{InAimResult, InTargetActor});
 }
 
 void ATurretPawnBase::BeginPlay()
@@ -145,6 +166,100 @@ bool ATurretPawnBase::FireWeaponByIndex_IfCan(int32 InWeaponIndex)
 	return bSucceeded; 
 }
 
+UTurretEvents* ATurretPawnBase::K2_GetTurretEvents_Implementation() const
+{
+	return Events;
+}
+
+ETurretAimingResult ATurretPawnBase::K2_StartAimingAt_Implementation(AActor* const NewTargetActor)
+{	
+	if (NewTargetActor)
+	{		
+		// @TODO: Signal if target is changed
+		const FVector VectorToTarget = NewTargetActor->GetActorLocation() - GetActorLocation();
+
+		const FVector2D TargetAzimuthAndElevationDegs = GetTargetAzimuthAndElevation(NewTargetActor);
+
+		TurretState.Aim.TargetActor = NewTargetActor;
+		RotateTurretYawMinimalTo(TargetAzimuthAndElevationDegs.X);
+		RotateGunPitchMinimalTo(TargetAzimuthAndElevationDegs.Y);
+
+		// @TODO: Check whether target is reachable by distance and azimuth/elevation
+		if ( ! IsTargetReachable(VectorToTarget.Size(), TargetAzimuthAndElevationDegs) )
+		{
+			return ETurretAimingResult::TargetIsUnreachable;
+		}
+
+		return ETurretAimingResult::InProgress;
+	}
+	else
+	{
+		StopAiming(FString(TEXT("StartAimingAt with nullptr called")), ETurretAimingResult::Aborted);
+		return ETurretAimingResult::Aborted;
+	}
+}
+
+FVector2D ATurretPawnBase::K2_GetTargetAzimuthAndElevation_Implementation(AActor* const InTarget) const
+{	
+	checkf(InTarget, TEXT("Target must be NON-nullptr pointer when calling \"%s\""), InTarget);
+
+	const FTransform& MeshCompTransform = GetMesh()->GetComponentTransform();	
+	const FVector CompSpaceTargetLocation = MeshCompTransform.InverseTransformPosition(InTarget->GetActorLocation());
+	
+	const FVector2D TargetAzimuthAndElevation = FMath::GetAzimuthAndElevation
+	(
+		CompSpaceTargetLocation,
+		FVector::ForwardVector,
+		FVector::RightVector,
+		FVector::UpVector
+	);	
+	const float AzimuthDegs = FMath::RadiansToDegrees(TargetAzimuthAndElevation.X);
+	const float ElevationDegs = FMath::RadiansToDegrees(TargetAzimuthAndElevation.Y);
+	return FVector2D { AzimuthDegs, ElevationDegs };
+}
+
+bool ATurretPawnBase::K2_IsTargetReachable_Implementation(float const InDistance, const FVector2D& InAzimuthAndElevation) const
+{
+	if ( ! IsTargetReachableByDistance(InDistance) )
+	{
+		return false;
+	}
+
+	if ( ! IsTargetReachableByElevation(InAzimuthAndElevation))
+	{
+		return false;
+	}
+
+	return true;
+}
+
+bool ATurretPawnBase::K2_IsTargetReachableByElevation_Implementation(const FVector2D& InTargetAndElevation) const
+{
+	return true; // @TODO:
+}
+
+bool ATurretPawnBase::K2_IsTargetReachableByDistance_Implementation(float const InDistance) const
+{
+	return true; // @TODO:	
+}
+
+void ATurretPawnBase::K2_StopAiming_Implementation(const FString& InReason, ETurretAimingResult InAimResult)
+{
+	// @TODO: Stop aiming if we were aiming at target
+	if (TurretState.Aim.TargetActor != nullptr)
+	{
+		M_LOG(TEXT("Stopping to aim; Reason=\"%s\""), *InReason);
+		FreezeAimMovement();
+		TurretState.Aim.TargetActor = nullptr;
+		SignalAimingFinished(InAimResult, nullptr);
+	}
+}
+
+bool ATurretPawnBase::K2_IsAimingFinished_Implementation() const
+{
+	return false; // @TODO
+}
+
 void ATurretPawnBase::OnController_Action_Fire_Implementation()
 {
 	// We process firing inside the PawnStartFire
@@ -165,7 +280,30 @@ void ATurretPawnBase::OnController_Action_FireThree_Implementation()
 
 void ATurretPawnBase::OnController_Action_DebugOne_Implementation()
 {
-	// Nothing is to be done here yet
+	if (AMyPlayerController* PC = GetMyPC())
+	{
+		AActor* const SelectedActor = PC->GetSelectedActor();
+		if (SelectedActor)
+		{
+			const bool bPreviousAimingFinished = IsAimingFinished();
+			M_LOG_WARN(TEXT("Aiming at actor \"%s\" of class \"%s\" (Previous aiming finished = \"%s\")"), *SelectedActor->GetName(), *SelectedActor->GetClass()->GetName(), bPreviousAimingFinished ? TEXT("YES") : TEXT("no"));
+			const ETurretAimingResult Result = StartAimingAt(SelectedActor);						
+			// @TODO: Log aiming result
+		}
+		else
+		{
+			M_LOG_WARN(TEXT("Unable to start aiming - No target is selected"));
+		}
+	}
+	else
+	{
+		M_LOG_ERROR(TEXT("Unable to start aiming - not instance of \"%s\""), *AMyPlayerController::StaticClass()->GetName());
+	}
+}
+
+AMyPlayerController* ATurretPawnBase::GetMyPC() const
+{
+	return Cast<AMyPlayerController>(GetController());
 }
 
 void ATurretPawnBase::OnController_Action_DebugTwo_Implementation()

@@ -5,12 +5,15 @@
 */
 
 #include "Util/TestUtil/TUPlayerController.h"
+#include "Turret/I/TurretTypes.h"
+#include "Turret/I/TurretEvents.h"
 #include "Util/Core/Log/MyLoggingTypes.h"
 #include "MyPlayerController.generated.h"
 
 class UPossessControllerComponent;
 
 class AMyPlayerPawn;
+class ITurret;
 
 UCLASS()
 class AMyPlayerController : public ATUPlayerController
@@ -26,7 +29,7 @@ public:
 	
 	// ~AController Begin
 	virtual void OnUnPossess() override;
-	virtual void OnPossess(APawn* InPawn) override;
+	virtual void OnPossess(APawn* InPawn) override;	
 	// ~AController End
 
 	// ~Access helpers Begin
@@ -46,8 +49,17 @@ public:
 	/** GetPossessComponent*/
 	UFUNCTION(BlueprintPure, Category=Possess)
 	UPossessControllerComponent* GetPossessComponent() const { return PossessComponent; }
-	
+
 protected:
+	// ~ITurret-related begin
+	virtual void OnUnPossessTurret(ITurret* Turret);
+	virtual void OnPossessTurret(ITurret* Turret);
+
+	UFUNCTION()
+	virtual void OnAimFinished(const FOnTurretAimingFinishedDelegateArgs& InAimingFinished);
+	// ~ITurret-related end
+
+
 	// ~Controller-level action handlers Begin
 	virtual void Axis_LookPitch(APawn* P, float InAmount) override;
 	virtual void Axis_LookYaw(APawn* P, float InAmount) override;
