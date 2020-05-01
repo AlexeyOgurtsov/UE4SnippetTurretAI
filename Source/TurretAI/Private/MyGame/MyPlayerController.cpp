@@ -34,9 +34,12 @@ void MyPCType::OnPossess(APawn* InPawn)
 	{
 		PossessComponent->OnController_Possessed(InPawn);
 	}
-	if (ITurret* Tur = Cast<ITurret>(GetPawn()))
+	if (GetPawn() && IsValid(GetPawn()))
 	{
-		OnPossessTurret(Tur);
+		if (ITurret* Tur = Cast<ITurret>(GetPawn()))
+		{
+			OnPossessTurret(Tur);
+		}
 	}
 }
 
@@ -47,11 +50,8 @@ void MyPCType::OnUnPossessTurret(ITurret* const Turret)
 }
 
 void MyPCType::OnPossessTurret(ITurret* const Turret)
-{
-	if (Turret)
-	{
-		Turret->GetTurretEvents()->OnAimingFinished.AddDynamic(this, &MyPCType::OnAimFinished);
-	}
+{	
+	Turret->GetTurretEvents()->OnAimingFinished.AddDynamic(this, &MyPCType::OnAimFinished);	
 }
 
 void MyPCType::OnAimFinished(const FOnTurretAimingFinishedDelegateArgs& InAimingFinished)

@@ -194,6 +194,8 @@ private:
 
 	UPROPERTY(EditAnywhere, Meta=(ShowOnlyInnerProperties))
 	FTurretState TurretState;
+
+	UPROPERTY()
 	UTurretEvents* Events = nullptr;
 
 	void TickTurret(float DeltaSeconds);

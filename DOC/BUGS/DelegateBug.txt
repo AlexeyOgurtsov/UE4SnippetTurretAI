@@ -1,3 +1,7 @@
+---------------------
++Fixed:
+Reason: Events holder was NOT UPROPERTY()!!!
+
 ------------- Where: 
 MyPlayerController.cpp
 
