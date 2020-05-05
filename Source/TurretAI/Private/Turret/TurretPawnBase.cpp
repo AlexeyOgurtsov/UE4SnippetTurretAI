@@ -307,7 +307,7 @@ void ATurretPawnBase::K2_StopFireFrom_Implementation(int32 WeaponIndex)
 
 bool ATurretPawnBase::K2_CanFireNow_Implementation(int32 WeaponIndex) const
 {
-	return false; // @TODO
+	return true; // @TODO
 }
 
 void ATurretPawnBase::OnController_Action_Fire_Implementation()

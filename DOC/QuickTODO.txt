@@ -5,11 +5,34 @@ Turret:
 	3.1. Last seen pawn storage etc.
 
 
-Turret weapon:
+Turret weapon
 1. Burst fire support
 2. StartFireFrom/StopFireFrom implementation.
+3. ITurret:FireOnce:
+	3.1. BUG: Fire call does NOT work
+		3.1.1. Because ITurret::CanFireNow does NOT work
+			3.1.1.1. Provide ITurretInvetory::CanFire 
+4. Event when the target rotation is reached
 
 Aiming:
 1. Aim at location
 2. Aiming arguments:
 	2.1. Aiming accuracy
+
+Helper:
+1. Log function for ETurretAimingResult
+
+----------------------------------------
+Behavior Tree:
+1. Why target actor location is not updated when the actor moves?
+
+Blackboard:
+1. Check that the actor target is set.
+2. Blackboard target is set:
+	2.1. When the BB key is updated, will entire tree be resetted right that time?
+
+Pawn perception: 
+1. Make perception component relative to the GUN bone
+2. How to see the perception area of the pawn?
+3. OnUnSeen event
+4. Save pawn when it's seen
