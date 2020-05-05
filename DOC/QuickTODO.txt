@@ -1,0 +1,15 @@
+Turret:
+1. Create a bt task template for turret
+2. Add class for each task
+3. For Turret controller:
+	3.1. Last seen pawn storage etc.
+
+
+Turret weapon:
+1. Burst fire support
+2. StartFireFrom/StopFireFrom implementation.
+
+Aiming:
+1. Aim at location
+2. Aiming arguments:
+	2.1. Aiming accuracy

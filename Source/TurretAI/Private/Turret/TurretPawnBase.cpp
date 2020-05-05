@@ -171,51 +171,76 @@ UTurretEvents* ATurretPawnBase::K2_GetTurretEvents_Implementation() const
 	return Events;
 }
 
-ETurretAimingResult ATurretPawnBase::K2_StartAimingAt_Implementation(AActor* const NewTargetActor)
+ETurretAimingResult ATurretPawnBase::K2_StartAimingAt_Implementation(AActor* const NewTargetActor, float AccuracyCoeff)
 {	
-	if (NewTargetActor)
-	{		
-		// @TODO: Signal if target is changed
-		const FVector VectorToTarget = NewTargetActor->GetActorLocation() - GetActorLocation();
+	bool bShouldStopAiming = false;	
 
-		const FVector2D TargetAzimuthAndElevationDegs = GetTargetAzimuthAndElevation(NewTargetActor);
-
-		TurretState.Aim.TargetActor = NewTargetActor;
-		RotateTurretYawMinimalTo(TargetAzimuthAndElevationDegs.X);
-		RotateGunPitchMinimalTo(TargetAzimuthAndElevationDegs.Y);
-
-		// @TODO: Check whether target is reachable by distance and azimuth/elevation
-		if ( ! IsTargetReachable(VectorToTarget.Size(), TargetAzimuthAndElevationDegs) )
-		{
-			return ETurretAimingResult::TargetIsUnreachable;
-		}
-
-		return ETurretAimingResult::InProgress;
-	}
-	else
+	if (NewTargetActor == nullptr)
 	{
-		StopAiming(FString(TEXT("StartAimingAt with nullptr called")), ETurretAimingResult::Aborted);
-		return ETurretAimingResult::Aborted;
+		bShouldStopAiming = true;
 	}
+	else if (NewTargetActor && NewTargetActor != TurretState.Aim.TargetActor)
+	{				
+		TurretState.Aim.TargetActor = nullptr;
+		const ETurretAimingResult AimResult = K2_StartAimingAtPoint_Implementation(NewTargetActor->GetActorLocation(), AccuracyCoeff);
+		if (AimResult == ETurretAimingResult::Success || AimResult == ETurretAimingResult::InProgress)
+		{
+			TurretState.Aim.TargetActor = NewTargetActor;
+			return AimResult;
+		}
+		else
+		{
+			bShouldStopAiming = true;
+		}
+	}
+	if(bShouldStopAiming)
+	{
+		StopAiming(FString(TEXT("Stopping aiming")), ETurretAimingResult::Aborted);
+	}	
+	return ETurretAimingResult::Aborted;
 }
 
-FVector2D ATurretPawnBase::K2_GetTargetAzimuthAndElevation_Implementation(AActor* const InTarget) const
+ETurretAimingResult ATurretPawnBase::K2_StartAimingAtPoint_Implementation(const FVector& NewTargetPoint, float AccuracyCoeff)
+{
+	const FVector VectorToTarget = NewTargetPoint - GetActorLocation();
+
+	// @TODO: accuracy calculation
+	const FVector2D TargetAzimuthAndElevationDegs = GetPointAzimuthAndElevation(NewTargetPoint, AccuracyCoeff);
+	RotateTurretYawMinimalTo(TargetAzimuthAndElevationDegs.X);
+	RotateGunPitchMinimalTo(TargetAzimuthAndElevationDegs.Y);
+
+	// @TODO: Check whether target is reachable by distance and azimuth/elevation
+	if (!IsTargetReachable(VectorToTarget.Size(), TargetAzimuthAndElevationDegs))
+	{
+		return ETurretAimingResult::TargetIsUnreachable;
+	}
+
+	return ETurretAimingResult::InProgress;
+}
+
+FVector2D ATurretPawnBase::K2_GetTargetAzimuthAndElevation_Implementation(AActor* const InTarget, float AccuracyCoeff) const
 {	
 	checkf(InTarget, TEXT("Target must be NON-nullptr pointer when calling \"%s\""), InTarget);
 
-	const FTransform& MeshCompTransform = GetMesh()->GetComponentTransform();	
-	const FVector CompSpaceTargetLocation = MeshCompTransform.InverseTransformPosition(InTarget->GetActorLocation());
-	
+	return GetPointAzimuthAndElevation(InTarget->GetActorLocation(), AccuracyCoeff);
+}
+
+FVector2D ATurretPawnBase::K2_GetPointAzimuthAndElevation_Implementation(const FVector& InTargetPoint, float AccuracyCoeff) const
+{
+	const FTransform& MeshCompTransform = GetMesh()->GetComponentTransform();
+
+	const FVector CompSpaceTargetLocation = MeshCompTransform.InverseTransformPosition(InTargetPoint);
+
 	const FVector2D TargetAzimuthAndElevation = FMath::GetAzimuthAndElevation
 	(
 		CompSpaceTargetLocation,
 		FVector::ForwardVector,
 		FVector::RightVector,
 		FVector::UpVector
-	);	
+	);
 	const float AzimuthDegs = FMath::RadiansToDegrees(TargetAzimuthAndElevation.X);
 	const float ElevationDegs = FMath::RadiansToDegrees(TargetAzimuthAndElevation.Y);
-	return FVector2D { AzimuthDegs, ElevationDegs };
+	return FVector2D{ AzimuthDegs, ElevationDegs };
 }
 
 bool ATurretPawnBase::K2_IsTargetReachable_Implementation(float const InDistance, const FVector2D& InAzimuthAndElevation) const
@@ -256,6 +281,31 @@ void ATurretPawnBase::K2_StopAiming_Implementation(const FString& InReason, ETur
 }
 
 bool ATurretPawnBase::K2_IsAimingFinished_Implementation() const
+{
+	return false; // @TODO
+}
+
+bool ATurretPawnBase::K2_FireOnce_Implementation(int32 WeaponIndex)
+{
+	if ( ! CanFireNow(WeaponIndex) )
+	{
+		return false;
+	}
+	PawnStartFire(WeaponIndex);
+	return true;
+}
+
+bool ATurretPawnBase::K2_StartFireFrom_Implementation(int32 WeaponIndex)
+{
+	return false; // @TODO
+}
+
+void ATurretPawnBase::K2_StopFireFrom_Implementation(int32 WeaponIndex)
+{
+	return; // @TODO
+}
+
+bool ATurretPawnBase::K2_CanFireNow_Implementation(int32 WeaponIndex) const
 {
 	return false; // @TODO
 }

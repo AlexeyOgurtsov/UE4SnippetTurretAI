@@ -1,0 +1,9 @@
++ FIXED():
+From Native Event _Implementation function we must ONLY call Super:: * _Implementation, 
+not tha main function!
+
+Поток 0x868 завершился с кодом 0 (0x0).
+Вызвано исключение по адресу 0x00007FF9C311174F (UE4Editor-Engine.dll) в UE4Editor-Win64-DebugGame.exe: 0xC00000FD: Stack overflow (параметры: 0x0000000000000001, 0x0000006F67E03C08).
+Необработанное исключение по адресу 0x00007FF9C311174F (UE4Editor-Engine.dll) в UE4Editor-Win64-DebugGame.exe: 0xC00000FD: Stack overflow (параметры: 0x0000000000000001, 0x0000006F67E03C08).
+
+Программа "[2040] UE4Editor-Win64-DebugGame.exe" завершилась с кодом 0 (0x0).

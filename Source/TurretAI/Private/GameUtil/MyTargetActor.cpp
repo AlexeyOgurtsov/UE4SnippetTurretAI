@@ -1,6 +1,8 @@
 #include "MyTargetActor.h"
 #include "Util/Core/LogUtilLib.h"
 
+#include "GameFramework/DamageType.h"
+
 AMyTargetActor::AMyTargetActor()
 {
 	SetCanBeDamaged(true);

@@ -7,6 +7,8 @@
 #include "Util/TestUtil/TUVisibleActor.h"
 #include "MyTargetActor.generated.h"
 
+class UDamageType;
+
 UCLASS()
 class AMyTargetActor : public ATUVisibleActor
 {

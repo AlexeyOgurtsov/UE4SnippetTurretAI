@@ -10,6 +10,8 @@ To rotate the turret VERTICALLY, player should use SELECT THREE (3) / SELECT FOU
 Alternatively, movement controls can be also used to control the static turret.
 player uses normal FIRE controls to fire the turret.
 
+SHIFT + 1 - aim at
+
 ---- Camera when controlling turret
 Player can control the camera rotation ever if he controls the turret, being able to rotate look around the turret.
 

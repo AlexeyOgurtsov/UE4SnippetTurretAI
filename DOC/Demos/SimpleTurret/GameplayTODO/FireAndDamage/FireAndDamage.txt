@@ -1,0 +1,92 @@
+----------
+Turret can take more damage when:
+- When fired from rear, for example;
+- When fired from the given distance;
+- When fired with a certain mode takes MORE damage;
+
+----------
+Fire modes:
+- Simple;
+- Toss (throwing grenade, for example);
+- Burst (Many bullets during the given time interval);
+- With long aiming time;
+- With short aiming;
+- Some projectile type may cause self-damage;
+
+----------
+Possible turret actions:
+- Energy regeneration (cannot shoot or aim at the time);
+- Aiming;
+- Firing;
+- Waiting;
+- Searching for enemy (random rotation around)
+- Noise heared (for example, something shot)
+- Battle cry
+
+-----
+Firing conditions:
+- By position:
+a) Near/Far
+b) Front/back/left/right
+c) High/low;
+
+
+----- Enemy Damage conditions
+----- This Damage conditions
+
+--- Battle state:
+- No battle at nearest time;
+- There's target;
+- Already attacked by target, in battle;
+- Right after battle;
+
+
+--- Win state:
+Enemy is stroner or weaker;
+
+-----------
+Visibility:
+- Only in front of turret
+
+
+--------
+No battle:	
+	When no enemy visible (idle) - scanning around periodically
+	When noise heared:
+		More far noise, least like regenarating process to be terminated;
+		More weak hit points, least like regenarating process to be terminated;
+		Scanning for noise if NOT regenerating
+	When attacked:
+		Go to battle state
+
+
+Scanning for noise:
+	- If noise location is inside the visiblity volume or near it, nothing is to be done;
+	- If left / right noise: Just rotate there
+	- If backward noise: randomly choose, whether should bother rotation or not
+
+	IF Noise source is NOT found at first looket at location
+		THEN: Go to scanning mode
+	IF Enemy found:
+		Go to battle state
+
+
+Battle state:
+	Use fast burst weapon = f(enemy nearer => higher, Restoration needed(Hit point count))	
+	Use toss grenade = ONLY IF Near target
+
+	a) Enemy invisible:
+		Perform SCANNING
+		If NOT found, go to Idle state
+
+	b) Enemy opened:
+		IF shooting STRAIGHT:
+			Shot the given range during the given time 
+		IF throwing shoot:
+			Shoot bomb
+
+	c) Enemy covered:
+		- Use accurate aiming
+		
+
+	Should Shot randomly = f(Hit level)

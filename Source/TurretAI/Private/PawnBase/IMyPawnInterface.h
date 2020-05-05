@@ -39,6 +39,7 @@ class IMyPawnInterface
 	GENERATED_BODY()
 
 public:
+
 	// ~HitState Begin
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category=IMyPawnInterface)
 	FMyHitState GetHitState() const;

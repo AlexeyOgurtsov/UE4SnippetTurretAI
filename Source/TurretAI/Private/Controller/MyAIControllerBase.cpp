@@ -135,7 +135,7 @@ float AMyAIControllerBase::GetMaxHitPoints() const
 	}
 }
 
-void AMyAIControllerBase::OnSeePawn(APawn* InPawn)
+void AMyAIControllerBase::OnSeePawn_Implementation(APawn* InPawn)
 {
 	bool const bSeenSamePawn = (LastSeenPawn == InPawn);
 	bool const bShouldLog = bAlwaysLogSeePawn || ( ! bSeenSamePawn );
@@ -145,7 +145,7 @@ void AMyAIControllerBase::OnSeePawn(APawn* InPawn)
 	LastSeenPawn = InPawn;
 }
 
-void AMyAIControllerBase::OnDamageStateChanged()
+void AMyAIControllerBase::OnDamageStateChanged_Implementation()
 {
 	M_LOGFUNC();
 }

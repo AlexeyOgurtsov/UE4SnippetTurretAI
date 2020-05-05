@@ -51,11 +51,13 @@ protected:
 	UFUNCTION(BlueprintCallable, Category = MyPawn)
 	float GetMaxHitPoints() const;
 
-	UFUNCTION()
-	virtual void OnSeePawn(APawn* InPawn);
+	UFUNCTION(BlueprintNativeEvent, Category = Perception)
+	void OnSeePawn(APawn* InPawn);
+	virtual void OnSeePawn_Implementation(APawn* InPawn);
 
-	UFUNCTION()
-	virtual void OnDamageStateChanged();
+	UFUNCTION(BlueprintNativeEvent, Category = Damage)
+	void OnDamageStateChanged();
+	virtual void OnDamageStateChanged_Implementation();
 
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyPawn, Meta=(AllowPrivateAccess = true))
